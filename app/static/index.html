@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Business Productivity Agent</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; }
+  h1 { font-size: 18px; }
+  #log { border: 1px solid #ddd; border-radius: 8px; padding: 12px; height: 420px; overflow-y: auto; margin-bottom: 12px; }
+  .msg { margin: 8px 0; line-height: 1.4; }
+  .user { color: #0a5; font-weight: 600; }
+  .agent { color: #06c; font-weight: 600; }
+  #row { display: flex; gap: 8px; }
+  #input { flex: 1; padding: 8px; font-size: 14px; }
+  button { padding: 8px 16px; font-size: 14px; }
+</style>
+</head>
+<body>
+  <h1>Business Productivity Agent</h1>
+  <div id="log"></div>
+  <div id="row">
+    <input id="input" placeholder="Ask about sales, stock, top products..." />
+    <button onclick="send()">Send</button>
+  </div>
+
+  <script>
+    const userId = "owner_" + Math.random().toString(36).slice(2, 8);
+    const log = document.getElementById("log");
+    const input = document.getElementById("input");
+
+    function append(role, text) {
+      const div = document.createElement("div");
+      div.className = "msg";
+      div.innerHTML = `<span class="${role}">${role === "user" ? "You" : "Agent"}:</span> ${text}`;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function send() {
+      const message = input.value.trim();
+      if (!message) return;
+      append("user", message);
+      input.value = "";
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, message }),
+      });
+      const data = await res.json();
+      append("agent", data.reply || "(no reply)");
+    }
+
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
+  </script>
+</body>
+</html>
